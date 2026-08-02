@@ -98,7 +98,7 @@ void Player::create_card() {
 
 void Player::choose_random_card() {
     random_x = choose_col();
-    random_y = choose_row();
+    random_y = 5;
     if (random_y == 5) {
         int trial = random_int(0, 1);
         if (trial) {
@@ -156,8 +156,12 @@ void Player::update(Center &center, Opp &opponent) {
 
         if (center.random_y < 5) {
             for (int i = 0; i < deck.size(); ++i) {
-                if (deck[i].pos.y == 5) {
-                    wild_card_moves++;
+                if (deck[i].pos.y == 5 && deck[i].pos.x == 0) {
+                    normal_moves++;
+                }
+                if (deck[i].pos.y == 5 && deck[i].pos.y == 5) {
+                    // wild_card_moves++;
+                    normal_moves++;
                 }
                 if (deck[i].pos.x == center.random_x && deck[i].pos.y != 5) {
                     normal_moves++;
@@ -169,8 +173,12 @@ void Player::update(Center &center, Opp &opponent) {
         }
         else {
             for (int i = 0; i < deck.size(); ++i) {
-                if (deck[i].pos.y == 5) {
-                    wild_card_moves++;
+                if (deck[i].pos.y == 5 && deck[i].pos.x == 0) {
+                    normal_moves++;
+                }
+                if (deck[i].pos.y == 5 && deck[i].pos.y == 5) {
+                    // wild_card_moves++;
+                    normal_moves++;
                 }
                 if (deck[i].pos.y == temp_x_pos && deck[i].pos.y != 5) {
                     normal_moves++;
@@ -248,6 +256,30 @@ void Player::update(Center &center, Opp &opponent) {
                                 pass_play = true;
                             }
                         }
+                        else if (deck[i].pos.y == 5 && deck[i].pos.x < 5) {
+                            dish_wild(center, i);
+                            pick_color = true;
+                            pass_play = true;
+                            return;
+                        }
+                        else if (deck[i].pos.y == 5 && deck[i].pos.x == 5) {
+                            dish_wild(center, i);
+                            pass_play = false;
+                            draw_wild = true;
+                            pick_color = true;
+                        }
+                    }
+                    else if (deck[i].pos.y == 5 && deck[i].pos.x < 5) {
+                        dish_wild(center, i);
+                        pick_color = true;
+                        pass_play = true;
+                        return;
+                    }
+                    else if (deck[i].pos.y == 5 && deck[i].pos.x == 5) {
+                        dish_wild(center, i);
+                        pass_play = false;
+                        draw_wild = true;
+                        pick_color = true;
                     }
                 }
             }
@@ -256,7 +288,7 @@ void Player::update(Center &center, Opp &opponent) {
             for (int i = 0; i < Clamp(deck.size() - 1, 0, 1000); ++i) {
                 collision_rect = {deck[i].rect.x, deck[i].rect.y, (deck[i].rect.width) / 1.5f, deck[i].rect.height};
                 if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), {collision_rect})) {
-                    if (deck[i].pos.y == 5) {
+                    if (deck[i].pos.y == 5 && deck[i].pos.x == 5) {
                         dish_wild(center, i);
                         if (center.random_y == 5 && center.random_x < 5) {
                             pick_color = true;
@@ -317,13 +349,37 @@ void Player::update(Center &center, Opp &opponent) {
                             pass_play = true;
                         }
                     }
+                    else if (deck[deck.size() - 1].pos.y == 5 && deck[deck.size() - 1].pos.x < 5) {
+                        dish_wild(center, deck.size() - 1);
+                        pick_color = true;
+                        pass_play = true;
+                        return;
+                    }
+                    else if (deck[deck.size() - 1].pos.y == 5 && deck[deck.size() - 1].pos.x == 5) {
+                        dish_wild(center, deck.size() - 1);
+                        pass_play = false;
+                        draw_wild = true;
+                        pick_color = true;
+                    }
+                }
+                else if (deck[deck.size() - 1].pos.y == 5 && deck[deck.size() - 1].pos.x < 5) {
+                    dish_wild(center, deck.size() - 1);
+                    pick_color = true;
+                    pass_play = true;
+                    return;
+                }
+                else if (deck[deck.size() - 1].pos.y == 5 && deck[deck.size() - 1].pos.x == 5) {
+                    dish_wild(center, deck.size() - 1);
+                    pass_play = false;
+                    draw_wild = true;
+                    pick_color = true;
                 }
             }
         }
         else if (wild_card_moves > 0) {
             collision_rect = {deck[deck.size() - 1].rect.x, deck[deck.size() - 1].rect.y, deck[deck.size() - 1].rect.width, deck[deck.size() - 1].rect.height};
             if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), {collision_rect})) {
-                if (deck[deck.size() - 1].pos.y == 5) {
+                if (deck[deck.size() - 1].pos.y == 5 && deck[deck.size() - 1].pos.x == 5) {
                     dish_wild(center, deck.size() - 1);
                     if (center.random_y == 5 && center.random_x < 5) {
                         pass_play = true;
