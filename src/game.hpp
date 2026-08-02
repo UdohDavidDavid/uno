@@ -29,6 +29,8 @@ public:
 
     Music w_sound;
 
+    Texture background;
+
     Game();
     ~Game();
     void run();

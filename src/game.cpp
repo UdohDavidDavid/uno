@@ -19,6 +19,7 @@ Game::Game() {
 
     SearchAndSetResourceDir("resources");
     cards = LoadTexture("cards.png");
+    // background = LoadTexture("uno_cards_background.webp");
 
     player1.load_texture();
     player1.load_deck();
@@ -44,7 +45,7 @@ Game::Game() {
     w_sound = LoadMusicStream("country.mp3");
     w_sound.looping = true;
     PlayMusicStream(w_sound);
-    SetMusicVolume(w_sound, 0.5f);
+    SetMusicVolume(w_sound, 0.4f);
 }
 
 Game::~Game() {
@@ -62,6 +63,8 @@ void Game::run() {
             ClearBackground({10, 10, 10, 255});
 
             draw_dots({67, 67, 67, 255});
+
+            // DrawTexturePro(background, {0, 0, 900, 766}, {0, 0, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT}, {0, 0}, 0, WHITE);
 
             center.draw();
 

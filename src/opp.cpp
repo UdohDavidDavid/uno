@@ -161,10 +161,10 @@ void Opp::sort_deck() {
 
 void Opp::play(Center &center) {
     if (possible_moves > 0) {
-        if (normal_moves > 0) {
+        // if (normal_moves > 0) {
             if (center.random_y < 5) {
                 for (int i = 0; i < deck.size(); ++i) {
-                    if (deck[i].pos.y == center.random_y && deck[i].pos.y != 5) {
+                    if (deck[i].pos.y == center.random_y || deck[i].pos.x == center.random_x && deck[i].pos.y != 5) {
                         if (deck[i].pos.x == 10) {
                             dish_card(center, i);
                             play_again = true;
@@ -187,30 +187,30 @@ void Opp::play(Center &center) {
                             return;
                         }
                     }
-                    else if (deck[i].pos.x == center.random_x && deck[i].pos.y != 5) {
-                        if (deck[i].pos.x < 9) {
-                            dish_card(center, i);
-                            play_again = false;
-                            return;
-                        }
-                        else {
-                            dish_card(center, i);
-                            play_again = true;
-                            return;
-                        }
-                        return;
-                    }
-                    else if (deck[i].pos.y == 5 && deck[i].pos.x < 5) {
+                    else if (deck[i].pos.y == 5 && deck[i].pos.x == 0 && wild_card_moves > 0) {
                         dish_wild(center, i);
                         play_again = false;
                         return;
                     }
-                    else if (deck[i].pos.y == 5 && deck[i].pos.x == 5) {
+                    else if (deck[i].pos.y == 5 && deck[i].pos.x == 5 && normal_moves == 0) {
                         dish_four_wild(center, i);
                         begin_four_timer = true;
                         play_again = true;
                         return;
                     }
+                    // else if (deck[i].pos.x == center.random_x && deck[i].pos.y != 5) {
+                    //     if (deck[i].pos.x < 9) {
+                    //         dish_card(center, i);
+                    //         play_again = false;
+                    //         return;
+                    //     }
+                    //     else {
+                    //         dish_card(center, i);
+                    //         play_again = true;
+                    //         return;
+                    //     }
+                    //     return;
+                    // }
                 }
             }
             else {
@@ -239,12 +239,12 @@ void Opp::play(Center &center) {
                         }
                         return;
                     }
-                    else if (deck[i].pos.y == 5 && deck[i].pos.x < 5) {
+                    else if (deck[i].pos.y == 5 && deck[i].pos.x == 0 && wild_card_moves > 0) {
                         dish_wild(center, i);
                         play_again = false;
                         return;
                     }
-                    else if (deck[i].pos.y == 5 && deck[i].pos.x == 5) {
+                    else if (deck[i].pos.y == 5 && deck[i].pos.x == 5 && normal_moves == 0) {
                         dish_four_wild(center, i);
                         begin_four_timer = true;
                         play_again = true;
@@ -252,24 +252,24 @@ void Opp::play(Center &center) {
                     }
                 }
             }
-        }
-        else if (wild_card_moves > 0) {
-            for (int i = 0; i < deck.size(); ++i) {
-                if (deck[i].pos.y == 5) {
-                    if (deck[i].pos.x == 5) {
-                        dish_four_wild(center, i);
-                        begin_four_timer = true;
-                        play_again = true;
-                        return;
-                    }
-                    else {
-                        dish_wild(center, i);
-                        play_again = false;
-                        return;
-                    }
-                }
-            }
-        }
+        // }
+        // else if (wild_card_moves > 0) {
+        //     for (int i = 0; i < deck.size(); ++i) {
+        //         if (deck[i].pos.y == 5) {
+        //             if (deck[i].pos.x == 5) {
+        //                 dish_four_wild(center, i);
+        //                 begin_four_timer = true;
+        //                 play_again = true;
+        //                 return;
+        //             }
+        //             else {
+        //                 dish_wild(center, i);
+        //                 play_again = false;
+        //                 return;
+        //             }
+        //         }
+        //     }
+        // }
     }
     else {
         spawn();
@@ -279,6 +279,7 @@ void Opp::play(Center &center) {
 void Opp::update(Center &center) {
     possible_moves = 0;
     normal_moves = 0;
+    four_wild_card_moves = 0;
     wild_card_moves = 0;
     temp_x_pos = center.random_x;
     is_over = center.is_over;
@@ -294,11 +295,10 @@ void Opp::update(Center &center) {
         if (center.random_y < 5) {
             for (int i = 0; i < deck.size(); ++i) {
                 if (deck[i].pos.y == 5 && deck[i].pos.x == 0) {
-                    normal_moves++;
+                    wild_card_moves++;
                 }
                 if (deck[i].pos.y == 5 && deck[i].pos.y == 5) {
-                    wild_card_moves++;
-                    normal_moves++;
+                    four_wild_card_moves++;
                 }
                 if (deck[i].pos.x == center.random_x && deck[i].pos.y != 5) {
                     normal_moves++;
@@ -311,11 +311,10 @@ void Opp::update(Center &center) {
         else {
             for (int i = 0; i < deck.size(); ++i) {
                 if (deck[i].pos.y == 5 && deck[i].pos.x == 0) {
-                    normal_moves++;
+                    wild_card_moves++;
                 }
                 if (deck[i].pos.y == 5 && deck[i].pos.y == 5) {
-                    wild_card_moves++;
-                    normal_moves++;
+                    four_wild_card_moves++;
                 }
                 if (deck[i].pos.y == temp_x_pos && deck[i].pos.y != 5) {
                     normal_moves++;
@@ -323,7 +322,7 @@ void Opp::update(Center &center) {
             };
         }
         if (normal_moves == 0) {
-            possible_moves = wild_card_moves;
+            possible_moves = wild_card_moves + four_wild_card_moves;
         }
         else {
             possible_moves = normal_moves;

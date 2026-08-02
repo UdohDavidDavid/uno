@@ -17,6 +17,7 @@ public:
     int normal_moves;
     int possible_moves;
     int wild_card_moves;
+    int four_wild_card_moves;
 
     int temp_x_pos;
 
