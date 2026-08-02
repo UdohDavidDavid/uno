@@ -48,11 +48,15 @@ public:
     bool is_over;
 
     bool has_win;
+
+    Sound draw_sound;
+    Sound play_sound;
     
     Opp();
     void draw();
     void update(Center &center);
     void load_texture();
+    void load_sounds();
     void create_card();
     void choose_random_card();
     void center_rect();

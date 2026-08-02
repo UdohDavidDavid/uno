@@ -27,6 +27,8 @@ public:
     Rectangle deck_texture_rect;
     Vector2 deck_pos;
 
+    Music w_sound;
+
     Game();
     ~Game();
     void run();

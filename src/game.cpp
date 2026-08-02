@@ -15,15 +15,18 @@ Game::Game() {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
     InitWindow(Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT, "Hello Raylib");
+    InitAudioDevice();
 
     SearchAndSetResourceDir("resources");
     cards = LoadTexture("cards.png");
 
     player1.load_texture();
     player1.load_deck();
+    player1.load_sounds();
 
     opponent.load_texture();
     opponent.load_deck();
+    opponent.load_sounds();
 
     center.load_texture();
 
@@ -37,14 +40,22 @@ Game::Game() {
         Constants::sprite_width, Constants::sprite_height};
 
     collision_rect = {picker_rect.x - (picker_rect.width / 2), picker_rect.y - (picker_rect.height / 2), picker_rect.width, picker_rect.height};
+
+    w_sound = LoadMusicStream("country.mp3");
+    w_sound.looping = true;
+    // PlayMusicStream(w_sound);
+    // SetMusicVolume(w_sound, 0.5f);
 }
 
 Game::~Game() {
+    CloseAudioDevice();
     CloseWindow();
 }
 
 void Game::run() {
 	while (!WindowShouldClose()) {
+        // UpdateMusicStream(w_sound);
+        // PlayMusicStream(w_sound);
 		BeginDrawing();
             process_keys();
 

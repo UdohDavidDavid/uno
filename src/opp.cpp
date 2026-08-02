@@ -41,6 +41,11 @@ void Opp::load_texture() {
     cards = LoadTexture("cards.png");
 }
 
+void Opp::load_sounds() {
+    draw_sound = LoadSound("cardsounds/cockatrice/draw.wav");
+    play_sound = LoadSound("cardsounds/cockatrice/playcard.wav");
+}
+
 void Opp::create_card() {
     choose_random_card();
     card.pos.x = random_x;
@@ -88,6 +93,7 @@ void Opp::load_deck() {
 
 
 void Opp::dish_wild(Center &center, int i) {
+    PlaySound(play_sound);
     currently_moving_card = deck[i];
     mov_x = currently_moving_card.rect.x;
     mov_y = currently_moving_card.rect.y;
@@ -98,6 +104,7 @@ void Opp::dish_wild(Center &center, int i) {
 }
 
 void Opp::dish_four_wild(Center &center, int i) {
+    PlaySound(play_sound);
     currently_moving_card = deck[i];
     mov_x = currently_moving_card.rect.x;
     mov_y = currently_moving_card.rect.y;
@@ -108,6 +115,7 @@ void Opp::dish_four_wild(Center &center, int i) {
 }
 
 void Opp::dish_card(Center &center, int i) {
+    PlaySound(play_sound);
     currently_moving_card = deck[i];
     mov_x = currently_moving_card.rect.x;
     mov_y = currently_moving_card.rect.y;
@@ -119,6 +127,7 @@ void Opp::dish_card(Center &center, int i) {
 
 void Opp::spawn() {
     if (!is_over) {
+        PlaySound(draw_sound);
         create_card();
         deck.push_back(card);
         rect.width += Constants::sprite_width * 0.73;

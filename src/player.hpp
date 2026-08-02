@@ -32,6 +32,7 @@ public:
     int normal_moves;
     int possible_moves;
     int wild_card_moves;
+    int four_wild_card_moves;
 
     bool is_turn;
 
@@ -55,6 +56,9 @@ public:
 
     int color_pick;
 
+    Sound draw_sound;
+    Sound play_sound;
+
     Player();
     void draw();
     void update(Center &center, Opp &opponent);
@@ -66,6 +70,7 @@ public:
     void add_card();
     void dish_deck(Center &center, int i, Opp &opponent);
     void dish_wild(Center &center, int i);
+    void load_sounds();
 };
 
 #endif
