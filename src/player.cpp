@@ -103,7 +103,7 @@ void Player::create_card() {
 
 void Player::choose_random_card() {
     random_x = choose_col();
-    random_y = 5;
+    random_y = choose_row();
     if (random_y == 5) {
         int trial = random_int(0, 1);
         if (trial) {
