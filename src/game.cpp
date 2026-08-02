@@ -43,8 +43,8 @@ Game::Game() {
 
     w_sound = LoadMusicStream("country.mp3");
     w_sound.looping = true;
-    // PlayMusicStream(w_sound);
-    // SetMusicVolume(w_sound, 0.5f);
+    PlayMusicStream(w_sound);
+    SetMusicVolume(w_sound, 0.5f);
 }
 
 Game::~Game() {
@@ -54,7 +54,7 @@ Game::~Game() {
 
 void Game::run() {
 	while (!WindowShouldClose()) {
-        // UpdateMusicStream(w_sound);
+        UpdateMusicStream(w_sound);
         // PlayMusicStream(w_sound);
 		BeginDrawing();
             process_keys();
