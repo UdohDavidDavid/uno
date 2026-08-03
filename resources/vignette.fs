@@ -5,8 +5,8 @@ out vec4 fragColor;
 
 float alpha;
 float distance;
-float radius = 0.8f;
-float outer_radius = 1.5f;
+float radius = 1.0f;
+float outer_radius = 2.0f;
 
 void main() {
     distance = length(fragPos.xy);

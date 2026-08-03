@@ -80,7 +80,6 @@ void Game::run() {
 
             ClearBackground({10, 10, 10, 255});
 
-            draw_dots({67, 67, 67, 255});
 
             // DrawTexturePro(background, {0, 0, 835, 569}, {(Constants::WINDOW_WIDTH / 2.0f) - Constants::sprite_width, (Constants::WINDOW_HEIGHT / 2.0f) - (Constants::sprite_height / 1.0f), Constants::sprite_width * 3, Constants::sprite_height * 2}, {0, 0}, 0, WHITE);
 
@@ -204,6 +203,7 @@ void Game::run() {
             // if (opponent.has_win) {
             //     DrawText("Player 2 win", int posX, int posY, int fontSize, Color color)
             // }
+            draw_dots({67, 67, 67, 255});
             BeginShaderMode(vignette);
                 DrawRectangleRec({0, 0, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT}, BLACK);
             EndShaderMode();
