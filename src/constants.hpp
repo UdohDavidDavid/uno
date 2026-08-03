@@ -2,8 +2,8 @@
 #define CONSTANTS_HPP
 
 namespace Constants {
-    inline const int WINDOW_WIDTH = 800;
-    inline const int WINDOW_HEIGHT = 600;
+    inline const int WINDOW_WIDTH = 600;
+    inline const int WINDOW_HEIGHT = 450;
     inline const char *WINDOW_NAME = "Uno";
 
     inline const float sprite_width = 41.0f;

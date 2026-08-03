@@ -36,6 +36,8 @@ public:
 
     bool is_turn;
 
+    bool passed;
+
     int temp_x_pos;
 
     bool pass_play;

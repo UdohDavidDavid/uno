@@ -31,6 +31,22 @@ public:
 
     Texture background;
 
+    float t;
+
+    Color colors[5];
+
+    Texture hand;
+
+    Rectangle hand_rect;
+    float hand_scale_x;
+    float hand_scale_y;
+
+    float last_card_timer;
+    float last_card_time;
+    bool say_uno;
+
+    Shader vignette;
+
     Game();
     ~Game();
     void run();

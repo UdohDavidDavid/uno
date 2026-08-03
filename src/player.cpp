@@ -14,6 +14,7 @@
 Player::Player() : card_num(Constants::initial_num_cards) {
     is_turn = true;
 
+    passed = false;
 
     draw_wild = false;
 
@@ -205,16 +206,31 @@ void Player::update(Center &center, Opp &opponent) {
 
         if (pass_play) {
             if (pick_color == false) {
-                static float timer = 0.0f;
-                static float last_time = 0.0f;
-                if (timer - last_time > 2.0f) {
-                    opponent.play(center);
-                    pass_play = false;
-                    timer = 0.0f;
-                    last_time = timer;
+                if (deck.size() > 1) {
+                    static float timer = 0.0f;
+                    static float last_time = 0.0f;
+                    if (timer - last_time > 2.0f) {
+                        opponent.play(center);
+                        pass_play = false;
+                        timer = 0.0f;
+                        last_time = timer;
+                    }
+                    else {
+                        timer += 1 * GetFrameTime();
+                    }
                 }
-                else {
-                    timer += 1 * GetFrameTime();
+                else if (deck.size() == 1) {
+                    static float timer = 0.0f;
+                    static float last_time = 0.0f;
+                    if (timer - last_time > 4.0f) {
+                        opponent.play(center);
+                        pass_play = false;
+                        timer = 0.0f;
+                        last_time = timer;
+                    }
+                    else {
+                        timer += 1 * GetFrameTime();
+                    }
                 }
             }
         }
@@ -288,9 +304,9 @@ void Player::update(Center &center, Opp &opponent) {
                     }
                     else if (deck[i].pos.y == 5 && deck[i].pos.x == 5 && normal_moves == 0) {
                         dish_wild(center, i);
+                        pick_color = true;
                         pass_play = false;
                         draw_wild = true;
-                        pick_color = true;
                     }
                 }
             }
