@@ -100,9 +100,6 @@ void Game::run() {
             opponent.draw();
             if (!center.is_over) opponent.update(center);
 
-            if (center.is_over && IsKeyPressed(KEY_G)) {
-                restart();
-            }
 
             if (player1.pick_color) {
                 DrawRectangleRec(player1.red, RED);
@@ -220,6 +217,9 @@ void Game::restart() {
     center.random_x = choose_col();
     center.random_y = choose_row();
     center.is_over = false;
+    player1.draw_wild = false;
+    opponent.draw_wild = false;
+    opponent.draw_four_wild = false;
 }
 
 void Game::draw_dots(Color color) {
@@ -311,5 +311,8 @@ void Game::process_keys() {
         center.is_over = false;
         player1.add_card();
         player1.add_card();
+    }
+    if (center.is_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(GetMousePosition(), player1.rect)) {
+        restart();
     }
 }

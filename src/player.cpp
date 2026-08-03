@@ -198,7 +198,7 @@ void Player::update(Center &center, Opp &opponent) {
             };
         }
         if (normal_moves == 0) {
-            possible_moves = wild_card_moves;
+            possible_moves = wild_card_moves + four_wild_card_moves;
         }
         else {
             possible_moves = normal_moves;
@@ -438,7 +438,7 @@ void Player::update(Center &center, Opp &opponent) {
 
         int last = deck.size() - 1;
         if (deck.size() > 0) {
-            collision_rect = {deck[last].rect.x, deck[last].rect.y, (deck[last].rect.width), deck[last].rect.height};
+            collision_rect = {deck[last].rect.x, deck[last].rect.y, deck[last].rect.width, deck[last].rect.height};
             if (CheckCollisionPointRec(GetMousePosition(), {collision_rect})) {
                 deck[last].isHovering = true;
                 deck[last].y_offset = Lerp(deck[last].y_offset, 1.0f, 0.3f);
