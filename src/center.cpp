@@ -4,10 +4,15 @@
 #include "raylib.h"
 #include "raymath.h"
 
-Center::Center() : 
+Center::Center() :
     tex_pos(0, 0),
     is_over(false),
-    draw_wild(0) {
+    is_opponent_playing(false),
+    draw_wild(0),
+    index(0),
+    increment_speed(1),
+    direction(1),
+    opp_num(1){
 
     choose_random_card();
     tex_rect = {

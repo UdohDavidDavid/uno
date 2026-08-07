@@ -5,7 +5,7 @@ out vec4 fragColor;
 
 float alpha;
 float distance;
-float radius = 1.0f;
+float radius = 0.2f;
 float outer_radius = 2.0f;
 
 void main() {

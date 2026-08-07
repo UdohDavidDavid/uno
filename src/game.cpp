@@ -11,6 +11,7 @@
 #include <cmath>
 #include <iostream>
 
+
 Game::Game() {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
@@ -29,6 +30,14 @@ Game::Game() {
     opponent.load_texture();
     opponent.load_deck();
     opponent.load_sounds();
+
+    opponent2.load_texture();
+    opponent2.load_deck();
+    opponent2.load_sounds();
+
+    opponent3.load_texture();
+    opponent3.load_deck();
+    opponent3.load_sounds();
 
     center.load_texture();
 
@@ -64,6 +73,16 @@ Game::Game() {
     say_uno = false;
 
     vignette = LoadShader("vignette.vs", "vignette.fs");
+
+    // Players.reserve(0);
+    // Players.push_back(player1);
+    Oppo.push_back(opponent);
+    // Oppo.push_back(opponent2);
+    Oppo.push_back(opponent3);
+    // Players.push_back(opponent);
+    // Players.push_back(opponent2);
+    // Players.push_back(opponent);
+    center.opp_num = Oppo.size();
 }
 
 Game::~Game() {
@@ -78,7 +97,8 @@ void Game::run() {
 		BeginDrawing();
             process_keys();
 
-            ClearBackground({10, 10, 10, 255});
+            // ClearBackground({10, 10, 10, 255});
+            ClearBackground(Constants::dark_slate_gray);
 
 
             // DrawTexturePro(background, {0, 0, 835, 569}, {(Constants::WINDOW_WIDTH / 2.0f) - Constants::sprite_width, (Constants::WINDOW_HEIGHT / 2.0f) - (Constants::sprite_height / 1.0f), Constants::sprite_width * 3, Constants::sprite_height * 2}, {0, 0}, 0, WHITE);
@@ -95,92 +115,134 @@ void Game::run() {
             center.draw();
 
             player1.draw();
-            if (!center.is_over) player1.update(center, opponent);
+            player1.hover(center);
+            // if (!center.is_over) player1.update(center);
+            if (player1.is_turn) player1.update(center);
 
-            opponent.draw();
-            if (!center.is_over) opponent.update(center);
+            // opponent.draw();
+            // if (!center.is_over) opponent.update(center, Players);
 
-
-            if (player1.pick_color) {
-                DrawRectangleRec(player1.red, RED);
-                DrawRectangleLinesEx(player1.red, 2.0f, WHITE);
-                DrawRectangleRec(player1.green, GREEN);
-                DrawRectangleLinesEx(player1.green, 2.0f, WHITE);
-                DrawRectangleRec(player1.yellow, YELLOW);
-                DrawRectangleLinesEx(player1.yellow, 2.0f, WHITE);
-                DrawRectangleRec(player1.blue, BLUE);
-                DrawRectangleLinesEx(player1.blue, 2.0f, WHITE);
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    if (CheckCollisionPointRec(GetMousePosition(), player1.red)) {
-                        player1.color_pick = 1;
-                        player1.pick_color = false;
-                    }
-                    else if (CheckCollisionPointRec(GetMousePosition(), player1.green)) {
-                        player1.color_pick = 2;
-                        player1.pick_color = false;
-                    }
-                    else if (CheckCollisionPointRec(GetMousePosition(), player1.yellow)) {
-                        player1.color_pick = 3;
-                        player1.pick_color = false;
-                    }
-                    else if (CheckCollisionPointRec(GetMousePosition(), player1.blue)) {
-                        player1.color_pick = 4;
-                        player1.pick_color = false;
-                    }
-                    center.random_x = player1.current_wild_card.pos.x + player1.color_pick;
-                }
+            // for (Player &player: Players) {
+            // center.index = center.index % Oppo.size();
+            // center.index = ((center.index % Oppo.size()) + Oppo.size()) % Oppo.size();
+//
+            // if (center.index / Oppo.size() < 0) {
+            //     player1.is_turn = true;
+            //     center.index = ((center.index % Oppo.size()) + Oppo.size()) % Oppo.size();
+            // }
+            // else if (center.index / Oppo.size() > 0) {
+            //     player1.is_turn = true;
+            //     center.index = center.index % Oppo.size();
+            // }
+//
+            if (center.index > Oppo.size() - 1) {
+                player1.is_turn = true;
             }
-
-            if (opponent.is_drawing_card) {
-                opponent.clone = {opponent.currently_moving_card.rect.x, opponent.currently_moving_card.rect.y, Constants::sprite_width, Constants::sprite_height};
-                    opponent.mov_x = Lerp(opponent.mov_x, center.rect.x, 0.2f);
-                    opponent.mov_y = Lerp(opponent.mov_y, center.rect.y, 0.2f);
-                    if (std::abs(center.rect.x - opponent.mov_x) < Constants::sprite_width / 2.0f && std::abs(center.rect.y - opponent.mov_y) < Constants::sprite_height / 2.0f) {
-                        if (opponent.currently_moving_card.pos.y == 5) {
-                            center.random_x = opponent.currently_moving_card.pos.x + opponent.check_possible_colors();
-                            center.random_y = opponent.currently_moving_card.pos.y;
-                        }
-                        else {
-                            center.random_x = opponent.currently_moving_card.pos.x;
-                            center.random_y = opponent.currently_moving_card.pos.y;
-                        }
-                        opponent.is_drawing_card = false;
-                    }
-                    opponent.clone.x = opponent.mov_x;
-                    opponent.clone.y = opponent.mov_y;
-                    opponent.texture_rect.x = Constants::sprite_offset_x + (Constants::sprite_width * opponent.currently_moving_card.pos.x);
-                    opponent.texture_rect.y = (Constants::sprite_offset_y - Constants::sprite_height) + (Constants::sprite_height * opponent.currently_moving_card.pos.y);
-                    DrawTexturePro(cards, opponent.texture_rect, opponent.clone, {0, 0}, 0, WHITE);
+            if (center.index < 0) {
+                player1.is_turn = true;
             }
+            // if (player1.is_turn && center.direction == -1) {
+            //     center.index = Oppo.size() - 1;
+            // }
+
+            for (auto &opponents : Oppo) {
+                opponents.draw();
+                opponents.sort_deck();
+                opponents.center_rect();
+            }
+            if (!player1.is_turn) Oppo[center.index].update(center);
+            // for (int i = 0; i < Oppo.size(); ++i) {
+            //     Oppo[i].draw();
+            // }
+            // Players[1].draw();
+            // Players[1].update(center, Players);
+            // Players[0].hover(center);
+
+            // Players[center.index].update(center, Players);
+            // if (center.index > Players.size()) center.index = center.index % Players.size();
+            // if (center.index < 0) center.index = ((((center.index) - Players.size()) + Players.size() ) % Players.size());
 
 
-            if (opponent.draw_one) {
-                player1.add_card();
-                player1.add_card();
-                opponent.draw_one = false;
-            }
-            if (opponent.draw_four_wild) {
-                draw_four(player1);
-                opponent.draw_four_wild = false;
-            }
-            if (player1.draw_wild) {
-                if (player1.pick_color == false) {
-                    draw_four(opponent);
-                    player1.draw_wild = false;
-                }
-            }
-            if (opponent.play_again) {
-                static float timer = 0.0f;
-                static float last_time = 0.0f;
-                if (timer - last_time > 1.0f) {
-                    opponent.play(center);
-                    timer = 0.0f;
-                    last_time = timer;
-                }
-                else {
-                    timer += 1 * GetFrameTime();
-                }
-            }
+            // if (Players[0].pick_color) {
+            //     DrawRectangleRec(player1.red, RED);
+            //     DrawRectangleLinesEx(player1.red, 2.0f, WHITE);
+            //     DrawRectangleRec(player1.green, GREEN);
+            //     DrawRectangleLinesEx(player1.green, 2.0f, WHITE);
+            //     DrawRectangleRec(player1.yellow, YELLOW);
+            //     DrawRectangleLinesEx(player1.yellow, 2.0f, WHITE);
+            //     DrawRectangleRec(player1.blue, BLUE);
+            //     DrawRectangleLinesEx(player1.blue, 2.0f, WHITE);
+            //     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            //         if (CheckCollisionPointRec(GetMousePosition(), player1.red)) {
+            //             Players[0].color_pick = 1;
+            //             Players[0].pick_color = false;
+            //         }
+            //         else if (CheckCollisionPointRec(GetMousePosition(), player1.green)) {
+            //             Players[0].color_pick = 2;
+            //             Players[0].pick_color = false;
+            //         }
+            //         else if (CheckCollisionPointRec(GetMousePosition(), player1.yellow)) {
+            //             Players[0].color_pick = 3;
+            //             Players[0].pick_color = false;
+            //         }
+            //         else if (CheckCollisionPointRec(GetMousePosition(), player1.blue)) {
+            //             Players[0].color_pick = 4;
+            //             Players[0].pick_color = false;
+            //         }
+            //         center.random_x = player1.current_wild_card.pos.x + player1.color_pick;
+            //     }
+            // }
+
+            // if (Players[center.index] > 0 && Players[center.index].is_drawing_card) {
+            //     Players[center.index].clone = {Players[center.index].currently_moving_card.rect.x, Players[center.index].currently_moving_card.rect.y, Constants::sprite_width, Constants::sprite_height};
+            //         Players[center.index].mov_x = Lerp(Players[center.index].mov_x, center.rect.x, 0.2f);
+            //         Players[center.index].mov_y = Lerp(Players[center.index].mov_y, center.rect.y, 0.2f);
+            //         if (std::abs(center.rect.x - Players[center.index].mov_x) < Constants::sprite_width / 2.0f && std::abs(center.rect.y - Players[center.index].mov_y) < Constants::sprite_height / 2.0f) {
+            //             if (Players[center.index].currently_moving_card.pos.y == 5) {
+            //                 center.random_x = Players[center.index].currently_moving_card.pos.x + Players[center.index].check_possible_colors();
+            //                 center.random_y = Players[center.index].currently_moving_card.pos.y;
+            //             }
+            //             else {
+            //                 center.random_x = Players[center.index].currently_moving_card.pos.x;
+            //                 center.random_y = Players[center.index].currently_moving_card.pos.y;
+            //             }
+            //             Players[center.index].is_drawing_card = false;
+            //         }
+            //         Players[center.index].clone.x = Players[center.index].mov_x;
+            //         Players[center.index].clone.y = Players[center.index].mov_y;
+            //         Players[center.index].texture_rect.x = Constants::sprite_offset_x + (Constants::sprite_width * Players[center.index].currently_moving_card.pos.x);
+            //         Players[center.index].texture_rect.y = (Constants::sprite_offset_y - Constants::sprite_height) + (Constants::sprite_height * Players[center.index].currently_moving_card.pos.y);
+            //         DrawTexturePro(cards, Players[center.index].texture_rect, Players[center.index].clone, {0, 0}, 0, WHITE);
+            // }
+            //
+
+            // if (opponent.draw_one) {
+            //     player1.add_card();
+            //     player1.add_card();
+            //     opponent.draw_one = false;
+            // }
+            // if (opponent.draw_four_wild) {
+            //     draw_four(player1);
+            //     opponent.draw_four_wild = false;
+            // }
+            // if (player1.draw_wild) {
+            //     if (player1.pick_color == false) {
+            //         draw_four(opponent);
+            //         player1.draw_wild = false;
+            //     }
+            // }
+            // if (opponent.play_again) {
+            //     static float timer = 0.0f;
+            //     static float last_time = 0.0f;
+            //     if (timer - last_time > 1.0f) {
+            //         opponent.play(center);
+            //         timer = 0.0f;
+            //         last_time = timer;
+            //     }
+            //     else {
+            //         timer += 1 * GetFrameTime();
+            //     }
+            // }
 
 
             collision_rect = {picker_rect.x - (picker_rect.width / 2), picker_rect.y - (picker_rect.height / 2), picker_rect.width, picker_rect.height};
@@ -204,7 +266,7 @@ void Game::run() {
             BeginShaderMode(vignette);
                 DrawRectangleRec({0, 0, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT}, BLACK);
             EndShaderMode();
-		
+
 		EndDrawing();
 	}
 }
@@ -220,6 +282,7 @@ void Game::restart() {
     player1.draw_wild = false;
     opponent.draw_wild = false;
     opponent.draw_four_wild = false;
+    opponent.draw_one = false;
 }
 
 void Game::draw_dots(Color color) {
@@ -246,17 +309,24 @@ void Game::process_keys() {
     if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         dest_pos = GetMousePosition();
         collision_rect = {picker_rect.x - (picker_rect.width / 2), picker_rect.y - (picker_rect.height / 2), picker_rect.width, picker_rect.height};
-        if (CheckCollisionPointRec(GetMousePosition(), collision_rect)) {
+        if (CheckCollisionPointRec(GetMousePosition(), collision_rect) && player1.is_turn) {
             player1.add_card();
-            player1.pass_play = true;
+            player1.is_turn = false;
+            if (center.direction == 1) {
+                center.index = 0;
+            }
+            else {
+                center.index = Oppo.size() - 1;
+            }
+
         }
     }
-    if (IsKeyPressed(KEY_ENTER)) {
-        opponent.play(center);
-    }
-    if (IsKeyPressed(KEY_V)) {
-        opponent.spawn();
-    }
+    // if (IsKeyPressed(KEY_ENTER)) {
+    //     opponent.play(center);
+    // }
+    // if (IsKeyPressed(KEY_V)) {
+    //     opponent.spawn();
+    // }
     // if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
     //     t += 1.0f * GetFrameTime();
     //     // if (std::abs(picker_pos.x - GetMousePosition().x) > 2.0f && std::abs(picker_pos.y - GetMousePosition().y) > 2.0f) {
@@ -312,7 +382,8 @@ void Game::process_keys() {
         player1.add_card();
         player1.add_card();
     }
-    if (center.is_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(GetMousePosition(), player1.rect)) {
+    // if (center.is_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(GetMousePosition(), player1.rect) && !CheckCollisionPointRec(GetMousePosition(), player1.red) && !CheckCollisionPointRec(GetMousePosition(), player1.green) && !CheckCollisionPointRec(GetMousePosition(), player1.blue) && !CheckCollisionPointRec(GetMousePosition(), player1.yellow)) {
+    if (center.is_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(GetMousePosition(), player1.rect) && !player1.pick_color) {
         restart();
     }
 }

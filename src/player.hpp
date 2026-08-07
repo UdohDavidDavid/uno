@@ -6,7 +6,6 @@
 #include <vector>
 #include "cards.hpp"
 #include "center.hpp"
-#include "opp.hpp"
 
 class Player {
 public:
@@ -40,7 +39,8 @@ public:
 
     int temp_x_pos;
 
-    bool pass_play;
+    bool skip_next;
+
 
     bool draw_wild;
 
@@ -58,21 +58,31 @@ public:
 
     int color_pick;
 
+    bool has_played;
+
     Sound draw_sound;
     Sound play_sound;
 
+    // Opp
+    Rectangle clone;
+    bool is_drawing_card;
+    Card currently_moving_card;
+    int mov_x;
+    int mov_y;
+
     Player();
-    void draw();
-    void update(Center &center, Opp &opponent);
-    void center_rect(); // Center deck to the middle of screen
-    void load_texture();
-    void load_deck();
-    void choose_random_card();
-    void create_card();
-    void add_card();
-    void dish_deck(Center &center, int i, Opp &opponent);
-    void dish_wild(Center &center, int i);
-    void load_sounds();
+     void draw();
+     void update(Center &center);
+     void center_rect(); // Center deck to the middle of screen
+     void load_texture();
+     void load_deck();
+     void choose_random_card();
+     void create_card();
+     void add_card();
+     void dish_deck(Center &center, int i);
+     void dish_wild(Center &center, int i);
+     void load_sounds();
+     void hover(Center &center);
 };
 
 #endif

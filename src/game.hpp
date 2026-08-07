@@ -5,12 +5,18 @@
 #include "player.hpp"
 #include "center.hpp"
 #include "opp.hpp"
+#include <vector>
 
 class Game {
 public:
 	Texture cards;
+
     Player player1;
-    Opp opponent;
+
+    Opp opponent = Opp(LH);
+    Opp opponent2 = Opp(TP);
+    Opp opponent3 = Opp(RH);
+
     Center center;
     Vector2 scale;
     bool isMoving = false;
@@ -46,6 +52,11 @@ public:
     bool say_uno;
 
     Shader vignette;
+
+
+    // std::vector<Player> Players;
+    std::vector<Opp> Oppo;
+    Player Players[2];
 
     Game();
     ~Game();

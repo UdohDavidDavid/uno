@@ -73,7 +73,7 @@ void draw_four(Player &player) {
 
 void draw_four(Opp &opponent) {
     for (int i = 0; i < 4; i++) {
-        opponent.spawn();
+        opponent.add_card();
     }
 }
 
