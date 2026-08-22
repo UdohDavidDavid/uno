@@ -1,389 +1,453 @@
 #include "game.hpp"
+#include "center.hpp"
+#include "constants.hpp"
+#include "helper.hpp"
+#include "opp.hpp"
+#include "player.hpp"
 #include "raylib.h"
 #include "raymath.h"
 #include "resource_dir.h"
-#include "constants.hpp"
-#include "player.hpp"
 #include "rlgl.h"
-#include "center.hpp"
-#include "opp.hpp"
-#include "helper.hpp"
-#include <cmath>
 #include <iostream>
 
-
 Game::Game() {
-    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+  SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
-    InitWindow(Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT, "Hello Raylib");
-    InitAudioDevice();
+  InitWindow(Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT, "Uno");
+  InitAudioDevice();
 
-    SearchAndSetResourceDir("resources");
-    cards = LoadTexture("cards.png");
-    hand = LoadTexture("Hand_icon.png");
-    background = LoadTexture("uno_good_background.png");
+  SearchAndSetResourceDir("resources");
+  cards = LoadTexture("cards.png");
+  hand = LoadTexture("Hand_icon.png");
+  background = LoadTexture("uno_good_background.png");
 
-    player1.load_texture();
-    player1.load_deck();
-    player1.load_sounds();
+  player1.load_texture();
+  player1.load_deck();
+  player1.load_sounds();
 
-    opponent.load_texture();
-    opponent.load_deck();
-    opponent.load_sounds();
+  opponent.load_texture();
+  opponent.load_deck();
+  opponent.load_sounds();
 
-    opponent2.load_texture();
-    opponent2.load_deck();
-    opponent2.load_sounds();
+  opponent2.load_texture();
+  opponent2.load_deck();
+  opponent2.load_sounds();
 
-    opponent3.load_texture();
-    opponent3.load_deck();
-    opponent3.load_sounds();
+  opponent3.load_texture();
+  opponent3.load_deck();
+  opponent3.load_sounds();
 
-    center.load_texture();
+  center.load_texture();
 
-    picker_pos = {((float)Constants::WINDOW_WIDTH / 2) - (Constants::sprite_width / 2.0f), ((float)Constants::WINDOW_HEIGHT / 2)};
-    scale = {1, 1};
-    picker_rect = {picker_pos.x, picker_pos.y, Constants::sprite_width * scale.x, Constants::sprite_height * scale.y};
+  picker_pos = {((float)Constants::WINDOW_WIDTH / 2) -
+                    (Constants::sprite_width / 2.0f),
+                ((float)Constants::WINDOW_HEIGHT / 2)};
+  scale = {1, 1};
+  picker_rect = {picker_pos.x, picker_pos.y, Constants::sprite_width * scale.x,
+                 Constants::sprite_height * scale.y};
 
-    picker_texture_rect = {
-        Constants::sprite_offset_x + (Constants::sprite_width * 0),
-        (Constants::sprite_offset_y - Constants::sprite_height) + (Constants::sprite_height * 0),
-        Constants::sprite_width, Constants::sprite_height};
+  picker_texture_rect = {
+      Constants::sprite_offset_x + (Constants::sprite_width * 0),
+      (Constants::sprite_offset_y - Constants::sprite_height) +
+          (Constants::sprite_height * 0),
+      Constants::sprite_width, Constants::sprite_height};
 
-    collision_rect = {picker_rect.x - (picker_rect.width / 2), picker_rect.y - (picker_rect.height / 2), picker_rect.width, picker_rect.height};
+  collision_rect = {picker_rect.x - (picker_rect.width / 2),
+                    picker_rect.y - (picker_rect.height / 2), picker_rect.width,
+                    picker_rect.height};
 
-    w_sound = LoadMusicStream("country.mp3");
-    w_sound.looping = true;
-    PlayMusicStream(w_sound);
-    SetMusicVolume(w_sound, 0.4f);
+  w_sound = LoadMusicStream("country.mp3");
+  w_sound.looping = true;
+  PlayMusicStream(w_sound);
+  SetMusicVolume(w_sound, 0.4f);
 
-    colors[0] = BLACK;
-    colors[1] = GetColor(0xA00010FF);
-    colors[2] = GetColor(0x106008FF);
-    colors[3] = GetColor(0xE8A000FF);
-    colors[4] = GetColor(0x001068FF);
+  colors[0] = BLACK;
+  colors[1] = GetColor(0xA00010FF);
+  colors[2] = GetColor(0x106008FF);
+  colors[3] = GetColor(0xE8A000FF);
+  colors[4] = GetColor(0x001068FF);
 
-    hand_scale_x = 1;
-    hand_scale_y = 1;
+  hand_scale_x = 1;
+  hand_scale_y = 1;
 
-    hand_rect = {(center.rect.x + Constants::sprite_width) + 25, center.rect.y + 30, 30 * hand_scale_x, 30 * hand_scale_y};
+  hand_rect = {(center.rect.x + Constants::sprite_width) + 25,
+               center.rect.y + 30, 30 * hand_scale_x, 30 * hand_scale_y};
 
-    last_card_timer = 0.0f;
-    last_card_time = 0.0f;
-    say_uno = false;
+  last_card_timer = 0.0f;
+  last_card_time = 0.0f;
+  say_uno = false;
 
-    vignette = LoadShader("vignette.vs", "vignette.fs");
+  vignette = LoadShader("vignette.vs", "vignette.fs");
 
-    // Players.reserve(0);
-    // Players.push_back(player1);
-    Oppo.push_back(opponent);
-    // Oppo.push_back(opponent2);
-    Oppo.push_back(opponent3);
-    // Players.push_back(opponent);
-    // Players.push_back(opponent2);
-    // Players.push_back(opponent);
-    center.opp_num = Oppo.size();
+  // Players.reserve(0);
+  // Players.push_back(player1);
+  Oppo.push_back(opponent);
+  Oppo.push_back(opponent2);
+  Oppo.push_back(opponent3);
+  // Players.push_back(opponent);
+  // Players.push_back(opponent2);
+  // Players.push_back(opponent);
+  center.opp_num = Oppo.size();
 }
 
 Game::~Game() {
-    CloseAudioDevice();
-    CloseWindow();
+  CloseAudioDevice();
+  CloseWindow();
 }
 
 void Game::run() {
-	while (!WindowShouldClose()) {
-        UpdateMusicStream(w_sound);
-        // PlayMusicStream(w_sound);
-		BeginDrawing();
-            process_keys();
+  while (!WindowShouldClose()) {
+    UpdateMusicStream(w_sound);
+    // PlayMusicStream(w_sound);
+    BeginDrawing();
+    process_keys();
 
-            // ClearBackground({10, 10, 10, 255});
-            ClearBackground(Constants::dark_slate_gray);
+    // ClearBackground({10, 10, 10, 255});
+    ClearBackground(Constants::deep_midnight_navy_2);
 
+    // DrawTexturePro(background, {0, 0, 835, 569}, {(Constants::WINDOW_WIDTH
+    // / 2.0f) - Constants::sprite_width, (Constants::WINDOW_HEIGHT / 2.0f) -
+    // (Constants::sprite_height / 1.0f), Constants::sprite_width * 3,
+    // Constants::sprite_height * 2}, {0, 0}, 0, WHITE);
 
-            // DrawTexturePro(background, {0, 0, 835, 569}, {(Constants::WINDOW_WIDTH / 2.0f) - Constants::sprite_width, (Constants::WINDOW_HEIGHT / 2.0f) - (Constants::sprite_height / 1.0f), Constants::sprite_width * 3, Constants::sprite_height * 2}, {0, 0}, 0, WHITE);
+    DrawRectangleRounded(
+        {(Constants::WINDOW_WIDTH / 2.0f) - (Constants::sprite_width)-1,
+         (Constants::WINDOW_HEIGHT / 2.0f) - (Constants::sprite_height / 2.0f),
+         2 * Constants::sprite_width + 1, Constants::sprite_height + 1},
+        0.1f, 3, WHITE);
+    // DrawRectangle((Constants::WINDOW_WIDTH / 2.0f) -
+    // (Constants::sprite_width), (Constants::WINDOW_HEIGHT / 2.0f) -
+    // (Constants::sprite_height / 2.0f), 2 * Constants::sprite_width,
+    // Constants::sprite_height ,  WHITE);
 
-            DrawRectangleRounded({(Constants::WINDOW_WIDTH / 2.0f) - (Constants::sprite_width) - 1, (Constants::WINDOW_HEIGHT / 2.0f) - (Constants::sprite_height / 2.0f), 2 * Constants::sprite_width + 1, Constants::sprite_height + 1}, 0.1f, 3, WHITE);
-            // DrawRectangle((Constants::WINDOW_WIDTH / 2.0f) -  (Constants::sprite_width), (Constants::WINDOW_HEIGHT / 2.0f) - (Constants::sprite_height / 2.0f), 2 * Constants::sprite_width, Constants::sprite_height ,  WHITE);
+    // int color_num = (center.random_y == 5) ? player1.temp_x_pos :
+    // center.random_y; DrawRectanglePro({((center.rect.x +
+    // Constants::sprite_width) + 24) - 12, ((center.rect.y - 1) + 4), 22, 22},
+    // {0, 0}, 0, WHITE); DrawRectanglePro({((center.rect.x +
+    // Constants::sprite_width) + 25) - 12, (center.rect.y) +4, 20, 20}, {0, 0},
+    // 0, colors[color_num]);
+    hand_rect = {(center.rect.x + Constants::sprite_width) + 25,
+                 center.rect.y + 30, 30 * hand_scale_x, 30 * hand_scale_y};
+    DrawTexturePro(hand, {0, 0, 250, 250}, hand_rect,
+                   {hand_rect.width / 2, hand_rect.height / 2}, 0, WHITE);
 
-            // int color_num = (center.random_y == 5) ? player1.temp_x_pos : center.random_y;
-            // DrawRectanglePro({((center.rect.x + Constants::sprite_width) + 24) - 12, ((center.rect.y - 1) + 4), 22, 22}, {0, 0}, 0, WHITE);
-            // DrawRectanglePro({((center.rect.x + Constants::sprite_width) + 25) - 12, (center.rect.y) +4, 20, 20}, {0, 0}, 0, colors[color_num]);
-            hand_rect = {(center.rect.x + Constants::sprite_width) + 25, center.rect.y + 30, 30 * hand_scale_x, 30 * hand_scale_y};
-            DrawTexturePro(hand, {0, 0, 250, 250}, hand_rect, {hand_rect.width/2, hand_rect.height/2}, 0, WHITE);
+    center.draw();
 
-            center.draw();
+    player1.draw();
+    player1.hover(center);
+    // if (!center.is_over) player1.update(center);
+    if (player1.is_turn)
+      player1.update(center);
 
-            player1.draw();
-            player1.hover(center);
-            // if (!center.is_over) player1.update(center);
-            if (player1.is_turn) player1.update(center);
+    // opponent.draw();
+    // if (!center.is_over) opponent.update(center, Players);
 
-            // opponent.draw();
-            // if (!center.is_over) opponent.update(center, Players);
+    // for (Player &player: Players) {
+    // center.index = center.index % Oppo.size();
+    // center.index = ((center.index % Oppo.size()) + Oppo.size()) %
+    // Oppo.size();
+    //
+    // if (center.index / Oppo.size() < 0) {
+    //     player1.is_turn = true;
+    //     center.index = ((center.index % Oppo.size()) + Oppo.size()) %
+    //     Oppo.size();
+    // }
+    // else if (center.index / Oppo.size() > 0) {
+    //     player1.is_turn = true;
+    //     center.index = center.index % Oppo.size();
+    // }
+    //
+    if (center.index > Oppo.size() - 1) {
+      player1.is_turn = true;
+    }
+    if (center.index < 0) {
+      player1.is_turn = true;
+    }
+    // if (player1.is_turn && center.direction == -1) {
+    //     center.index = Oppo.size() - 1;
+    // }
 
-            // for (Player &player: Players) {
-            // center.index = center.index % Oppo.size();
-            // center.index = ((center.index % Oppo.size()) + Oppo.size()) % Oppo.size();
-//
-            // if (center.index / Oppo.size() < 0) {
-            //     player1.is_turn = true;
-            //     center.index = ((center.index % Oppo.size()) + Oppo.size()) % Oppo.size();
-            // }
-            // else if (center.index / Oppo.size() > 0) {
-            //     player1.is_turn = true;
-            //     center.index = center.index % Oppo.size();
-            // }
-//
-            if (center.index > Oppo.size() - 1) {
-                player1.is_turn = true;
-            }
-            if (center.index < 0) {
-                player1.is_turn = true;
-            }
-            // if (player1.is_turn && center.direction == -1) {
-            //     center.index = Oppo.size() - 1;
-            // }
+    for (auto &opponents : Oppo) {
+      opponents.draw();
+      opponents.sort_deck();
+      opponents.center_rect();
+    }
+    if (!player1.is_turn)
+      Oppo[center.index].update(center);
+    // for (int i = 0; i < Oppo.size(); ++i) {
+    //     Oppo[i].draw();
+    // }
+    // Players[1].draw();
+    // Players[1].update(center, Players);
+    // Players[0].hover(center);
 
-            for (auto &opponents : Oppo) {
-                opponents.draw();
-                opponents.sort_deck();
-                opponents.center_rect();
-            }
-            if (!player1.is_turn) Oppo[center.index].update(center);
-            // for (int i = 0; i < Oppo.size(); ++i) {
-            //     Oppo[i].draw();
-            // }
-            // Players[1].draw();
-            // Players[1].update(center, Players);
-            // Players[0].hover(center);
+    // Players[center.index].update(center, Players);
+    // if (center.index > Players.size()) center.index = center.index %
+    // Players.size(); if (center.index < 0) center.index = ((((center.index) -
+    // Players.size()) + Players.size() ) % Players.size());
 
-            // Players[center.index].update(center, Players);
-            // if (center.index > Players.size()) center.index = center.index % Players.size();
-            // if (center.index < 0) center.index = ((((center.index) - Players.size()) + Players.size() ) % Players.size());
+    // if (Players[0].pick_color) {
+    //     DrawRectangleRec(player1.red, RED);
+    //     DrawRectangleLinesEx(player1.red, 2.0f, WHITE);
+    //     DrawRectangleRec(player1.green, GREEN);
+    //     DrawRectangleLinesEx(player1.green, 2.0f, WHITE);
+    //     DrawRectangleRec(player1.yellow, YELLOW);
+    //     DrawRectangleLinesEx(player1.yellow, 2.0f, WHITE);
+    //     DrawRectangleRec(player1.blue, BLUE);
+    //     DrawRectangleLinesEx(player1.blue, 2.0f, WHITE);
+    //     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    //         if (CheckCollisionPointRec(GetMousePosition(), player1.red)) {
+    //             Players[0].color_pick = 1;
+    //             Players[0].pick_color = false;
+    //         }
+    //         else if (CheckCollisionPointRec(GetMousePosition(),
+    //         player1.green)) {
+    //             Players[0].color_pick = 2;
+    //             Players[0].pick_color = false;
+    //         }
+    //         else if (CheckCollisionPointRec(GetMousePosition(),
+    //         player1.yellow)) {
+    //             Players[0].color_pick = 3;
+    //             Players[0].pick_color = false;
+    //         }
+    //         else if (CheckCollisionPointRec(GetMousePosition(),
+    //         player1.blue)) {
+    //             Players[0].color_pick = 4;
+    //             Players[0].pick_color = false;
+    //         }
+    //         center.random_x = player1.current_wild_card.pos.x +
+    //         player1.color_pick;
+    //     }
+    // }
 
+    // if (Players[center.index] > 0 && Players[center.index].is_drawing_card) {
+    //     Players[center.index].clone =
+    //     {Players[center.index].currently_moving_card.rect.x,
+    //     Players[center.index].currently_moving_card.rect.y,
+    //     Constants::sprite_width, Constants::sprite_height};
+    //         Players[center.index].mov_x = Lerp(Players[center.index].mov_x,
+    //         center.rect.x, 0.2f); Players[center.index].mov_y =
+    //         Lerp(Players[center.index].mov_y, center.rect.y, 0.2f); if
+    //         (std::abs(center.rect.x - Players[center.index].mov_x) <
+    //         Constants::sprite_width / 2.0f && std::abs(center.rect.y -
+    //         Players[center.index].mov_y) < Constants::sprite_height / 2.0f) {
+    //             if (Players[center.index].currently_moving_card.pos.y == 5) {
+    //                 center.random_x =
+    //                 Players[center.index].currently_moving_card.pos.x +
+    //                 Players[center.index].check_possible_colors();
+    //                 center.random_y =
+    //                 Players[center.index].currently_moving_card.pos.y;
+    //             }
+    //             else {
+    //                 center.random_x =
+    //                 Players[center.index].currently_moving_card.pos.x;
+    //                 center.random_y =
+    //                 Players[center.index].currently_moving_card.pos.y;
+    //             }
+    //             Players[center.index].is_drawing_card = false;
+    //         }
+    //         Players[center.index].clone.x = Players[center.index].mov_x;
+    //         Players[center.index].clone.y = Players[center.index].mov_y;
+    //         Players[center.index].texture_rect.x = Constants::sprite_offset_x
+    //         + (Constants::sprite_width *
+    //         Players[center.index].currently_moving_card.pos.x);
+    //         Players[center.index].texture_rect.y =
+    //         (Constants::sprite_offset_y - Constants::sprite_height) +
+    //         (Constants::sprite_height *
+    //         Players[center.index].currently_moving_card.pos.y);
+    //         DrawTexturePro(cards, Players[center.index].texture_rect,
+    //         Players[center.index].clone, {0, 0}, 0, WHITE);
+    // }
+    //
 
-            // if (Players[0].pick_color) {
-            //     DrawRectangleRec(player1.red, RED);
-            //     DrawRectangleLinesEx(player1.red, 2.0f, WHITE);
-            //     DrawRectangleRec(player1.green, GREEN);
-            //     DrawRectangleLinesEx(player1.green, 2.0f, WHITE);
-            //     DrawRectangleRec(player1.yellow, YELLOW);
-            //     DrawRectangleLinesEx(player1.yellow, 2.0f, WHITE);
-            //     DrawRectangleRec(player1.blue, BLUE);
-            //     DrawRectangleLinesEx(player1.blue, 2.0f, WHITE);
-            //     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            //         if (CheckCollisionPointRec(GetMousePosition(), player1.red)) {
-            //             Players[0].color_pick = 1;
-            //             Players[0].pick_color = false;
-            //         }
-            //         else if (CheckCollisionPointRec(GetMousePosition(), player1.green)) {
-            //             Players[0].color_pick = 2;
-            //             Players[0].pick_color = false;
-            //         }
-            //         else if (CheckCollisionPointRec(GetMousePosition(), player1.yellow)) {
-            //             Players[0].color_pick = 3;
-            //             Players[0].pick_color = false;
-            //         }
-            //         else if (CheckCollisionPointRec(GetMousePosition(), player1.blue)) {
-            //             Players[0].color_pick = 4;
-            //             Players[0].pick_color = false;
-            //         }
-            //         center.random_x = player1.current_wild_card.pos.x + player1.color_pick;
-            //     }
-            // }
+    // if (opponent.draw_one) {
+    //     player1.add_card();
+    //     player1.add_card();
+    //     opponent.draw_one = false;
+    // }
+    // if (opponent.draw_four_wild) {
+    //     draw_four(player1);
+    //     opponent.draw_four_wild = false;
+    // }
+    // if (player1.draw_wild) {
+    //     if (player1.pick_color == false) {
+    //         draw_four(opponent);
+    //         player1.draw_wild = false;
+    //     }
+    // }
+    // if (opponent.play_again) {
+    //     static float timer = 0.0f;
+    //     static float last_time = 0.0f;
+    //     if (timer - last_time > 1.0f) {
+    //         opponent.play(center);
+    //         timer = 0.0f;
+    //         last_time = timer;
+    //     }
+    //     else {
+    //         timer += 1 * GetFrameTime();
+    //     }
+    // }
 
-            // if (Players[center.index] > 0 && Players[center.index].is_drawing_card) {
-            //     Players[center.index].clone = {Players[center.index].currently_moving_card.rect.x, Players[center.index].currently_moving_card.rect.y, Constants::sprite_width, Constants::sprite_height};
-            //         Players[center.index].mov_x = Lerp(Players[center.index].mov_x, center.rect.x, 0.2f);
-            //         Players[center.index].mov_y = Lerp(Players[center.index].mov_y, center.rect.y, 0.2f);
-            //         if (std::abs(center.rect.x - Players[center.index].mov_x) < Constants::sprite_width / 2.0f && std::abs(center.rect.y - Players[center.index].mov_y) < Constants::sprite_height / 2.0f) {
-            //             if (Players[center.index].currently_moving_card.pos.y == 5) {
-            //                 center.random_x = Players[center.index].currently_moving_card.pos.x + Players[center.index].check_possible_colors();
-            //                 center.random_y = Players[center.index].currently_moving_card.pos.y;
-            //             }
-            //             else {
-            //                 center.random_x = Players[center.index].currently_moving_card.pos.x;
-            //                 center.random_y = Players[center.index].currently_moving_card.pos.y;
-            //             }
-            //             Players[center.index].is_drawing_card = false;
-            //         }
-            //         Players[center.index].clone.x = Players[center.index].mov_x;
-            //         Players[center.index].clone.y = Players[center.index].mov_y;
-            //         Players[center.index].texture_rect.x = Constants::sprite_offset_x + (Constants::sprite_width * Players[center.index].currently_moving_card.pos.x);
-            //         Players[center.index].texture_rect.y = (Constants::sprite_offset_y - Constants::sprite_height) + (Constants::sprite_height * Players[center.index].currently_moving_card.pos.y);
-            //         DrawTexturePro(cards, Players[center.index].texture_rect, Players[center.index].clone, {0, 0}, 0, WHITE);
-            // }
-            //
+    collision_rect = {picker_rect.x - (picker_rect.width / 2),
+                      picker_rect.y - (picker_rect.height / 2),
+                      picker_rect.width, picker_rect.height};
+    if (CheckCollisionPointRec(GetMousePosition(),
+                               {picker_rect.x - (picker_rect.width / 2),
+                                picker_rect.y - (picker_rect.height / 2),
+                                picker_rect.width, picker_rect.height}) &&
+        player1.is_turn) {
+      scale.x = Lerp(scale.x, 1.2f, 0.1f);
+      scale.y = Lerp(scale.y, 1.2f, 0.1f);
+    } else {
+      scale.x = Lerp(scale.x, 1.0f, 0.1);
+      scale.y = Lerp(scale.y, 1.0f, 0.1);
+    }
 
-            // if (opponent.draw_one) {
-            //     player1.add_card();
-            //     player1.add_card();
-            //     opponent.draw_one = false;
-            // }
-            // if (opponent.draw_four_wild) {
-            //     draw_four(player1);
-            //     opponent.draw_four_wild = false;
-            // }
-            // if (player1.draw_wild) {
-            //     if (player1.pick_color == false) {
-            //         draw_four(opponent);
-            //         player1.draw_wild = false;
-            //     }
-            // }
-            // if (opponent.play_again) {
-            //     static float timer = 0.0f;
-            //     static float last_time = 0.0f;
-            //     if (timer - last_time > 1.0f) {
-            //         opponent.play(center);
-            //         timer = 0.0f;
-            //         last_time = timer;
-            //     }
-            //     else {
-            //         timer += 1 * GetFrameTime();
-            //     }
-            // }
+    picker_rect = {picker_pos.x, picker_pos.y,
+                   Constants::sprite_width * scale.x,
+                   Constants::sprite_height * scale.y};
+    DrawTexturePro(cards, picker_texture_rect, picker_rect,
+                   {picker_rect.width / 2, picker_rect.height / 2}, 0, WHITE);
 
+    // if (opponent.has_win) {
+    //     DrawText("Player 2 win", int posX, int posY, int fontSize, Color
+    //     color)
+    // }
+    draw_dots({67, 67, 67, 255});
+    BeginShaderMode(vignette);
+    DrawRectangleRec({0, 0, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT},
+                     BLACK);
+    EndShaderMode();
 
-            collision_rect = {picker_rect.x - (picker_rect.width / 2), picker_rect.y - (picker_rect.height / 2), picker_rect.width, picker_rect.height};
-            if (CheckCollisionPointRec(GetMousePosition(), {picker_rect.x - (picker_rect.width / 2), picker_rect.y - (picker_rect.height / 2), picker_rect.width, picker_rect.height})) {
-                scale.x = Lerp(scale.x, 1.2f, 0.1f);
-                scale.y = Lerp(scale.y, 1.2f, 0.1f);
-            }
-            else {
-                scale.x = Lerp(scale.x, 1.0f, 0.1);
-                scale.y = Lerp(scale.y, 1.0f, 0.1);
-            }
-
-            picker_rect = {picker_pos.x, picker_pos.y, Constants::sprite_width * scale.x, Constants::sprite_height * scale.y};
-            DrawTexturePro(cards, picker_texture_rect, picker_rect, {picker_rect.width / 2, picker_rect.height / 2}, 0, WHITE);
-
-
-            // if (opponent.has_win) {
-            //     DrawText("Player 2 win", int posX, int posY, int fontSize, Color color)
-            // }
-            draw_dots({67, 67, 67, 255});
-            BeginShaderMode(vignette);
-                DrawRectangleRec({0, 0, Constants::WINDOW_WIDTH, Constants::WINDOW_HEIGHT}, BLACK);
-            EndShaderMode();
-
-		EndDrawing();
-	}
+    EndDrawing();
+  }
 }
 
 void Game::restart() {
-    player1.deck.clear();
-    player1.load_deck();
-    opponent.deck.clear();
-    opponent.load_deck();
-    center.random_x = choose_col();
-    center.random_y = choose_row();
-    center.is_over = false;
-    player1.draw_wild = false;
-    opponent.draw_wild = false;
-    opponent.draw_four_wild = false;
-    opponent.draw_one = false;
+  player1.deck.clear();
+  player1.load_deck();
+  opponent.deck.clear();
+  opponent.load_deck();
+  center.random_x = choose_col();
+  center.random_y = choose_row();
+  center.is_over = false;
+  player1.draw_wild = false;
+  opponent.draw_wild = false;
+  opponent.draw_four_wild = false;
+  opponent.draw_one = false;
 }
 
 void Game::draw_dots(Color color) {
-    static int offset = 10;
-    for (int i = 1; i < Constants::WINDOW_WIDTH / offset; ++i) {
-        for (int j = 1; j < Constants::WINDOW_HEIGHT / offset; ++j) {
-            DrawPixel(i * offset, j * offset, color);
-        }
+  static int offset = 10;
+  for (int i = 1; i < Constants::WINDOW_WIDTH / offset; ++i) {
+    for (int j = 1; j < Constants::WINDOW_HEIGHT / offset; ++j) {
+      DrawPixel(i * offset, j * offset, color);
     }
+  }
 }
 
 void Game::process_keys() {
-    if(IsKeyPressed(KEY_SPACE)) {
+  if (IsKeyPressed(KEY_SPACE)) {
+    player1.add_card();
+  }
+  if (IsKeyPressed(KEY_BACKSPACE)) {
+    if (player1.card_num > 1) {
+      player1.rect.width -= Constants::sprite_width / 1.5f;
+      player1.center_rect();
+      player1.card_num--;
+      player1.deck.pop_back();
+    }
+  }
+  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    dest_pos = GetMousePosition();
+    collision_rect = {picker_rect.x - (picker_rect.width / 2),
+                      picker_rect.y - (picker_rect.height / 2),
+                      picker_rect.width, picker_rect.height};
+    if (CheckCollisionPointRec(GetMousePosition(), collision_rect) &&
+        player1.is_turn) {
+      player1.add_card();
+      player1.is_turn = false;
+      if (center.direction == 1) {
+        center.index = 0;
+      } else {
+        center.index = Oppo.size() - 1;
+      }
+    }
+  }
+  // if (IsKeyPressed(KEY_ENTER)) {
+  //     opponent.play(center);
+  // }
+  // if (IsKeyPressed(KEY_V)) {
+  //     opponent.spawn();
+  // }
+  // if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+  //     t += 1.0f * GetFrameTime();
+  //     // if (std::abs(picker_pos.x - GetMousePosition().x) > 2.0f &&
+  //     std::abs(picker_pos.y - GetMousePosition().y) > 2.0f) {
+  //     // if (std::abs(picker_pos.x - GetMousePosition().x) > 2.0f) {
+  //         picker_pos.x = Lerp(picker_pos.x, GetMousePosition().x, std::pow(t,
+  //         2)); picker_pos.y = Lerp(picker_pos.y, GetMousePosition().y,
+  //         std::pow(t, 2));
+  //     // }
+  //     // else {
+  //     //     t = 0;
+  //     // }
+  // }
+  // if (IsMouseButtonUp(MOUSE_BUTTON_LEFT)) {
+  //     t = 0;
+  // }
+  // if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+  // CheckCollisionPointRec(GetMousePosition(), hand_rect)) {
+  if (CheckCollisionPointRec(GetMousePosition(),
+                             {hand_rect.x - hand_rect.width / 2,
+                              hand_rect.y - hand_rect.height / 2,
+                              hand_rect.width, hand_rect.height})) {
+    hand_scale_x = Lerp(hand_scale_x, 1.5f, 0.1);
+    hand_scale_y = Lerp(hand_scale_y, 1.5f, 0.1);
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+        player1.pick_color == false) {
+      std::cout << "Uno" << std::endl;
+      // last_card_timer = true;
+      say_uno = true;
+    }
+  } else {
+    hand_scale_x = Lerp(hand_scale_x, 1, 0.1);
+    hand_scale_y = Lerp(hand_scale_y, 1, 0.1);
+  }
+
+  if (player1.deck.size() == 1 && player1.pick_color == false) {
+    if (say_uno == false) {
+      if (last_card_timer - last_card_time > 3.0f) {
         player1.add_card();
-    }
-    if(IsKeyPressed(KEY_BACKSPACE)) {
-        if (player1.card_num > 1) {
-            player1.rect.width -= Constants::sprite_width / 1.5f;
-            player1.center_rect();
-            player1.card_num--;
-            player1.deck.pop_back();
-        }
-    }
-    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        dest_pos = GetMousePosition();
-        collision_rect = {picker_rect.x - (picker_rect.width / 2), picker_rect.y - (picker_rect.height / 2), picker_rect.width, picker_rect.height};
-        if (CheckCollisionPointRec(GetMousePosition(), collision_rect) && player1.is_turn) {
-            player1.add_card();
-            player1.is_turn = false;
-            if (center.direction == 1) {
-                center.index = 0;
-            }
-            else {
-                center.index = Oppo.size() - 1;
-            }
-
-        }
-    }
-    // if (IsKeyPressed(KEY_ENTER)) {
-    //     opponent.play(center);
-    // }
-    // if (IsKeyPressed(KEY_V)) {
-    //     opponent.spawn();
-    // }
-    // if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-    //     t += 1.0f * GetFrameTime();
-    //     // if (std::abs(picker_pos.x - GetMousePosition().x) > 2.0f && std::abs(picker_pos.y - GetMousePosition().y) > 2.0f) {
-    //     // if (std::abs(picker_pos.x - GetMousePosition().x) > 2.0f) {
-    //         picker_pos.x = Lerp(picker_pos.x, GetMousePosition().x, std::pow(t, 2));
-    //         picker_pos.y = Lerp(picker_pos.y, GetMousePosition().y, std::pow(t, 2));
-    //     // }
-    //     // else {
-    //     //     t = 0;
-    //     // }
-    // }
-    // if (IsMouseButtonUp(MOUSE_BUTTON_LEFT)) {
-    //     t = 0;
-    // }
-    // if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), hand_rect)) {
-    if (CheckCollisionPointRec(GetMousePosition(), {hand_rect.x - hand_rect.width / 2, hand_rect.y - hand_rect.height / 2, hand_rect.width, hand_rect.height})) {
-        hand_scale_x = Lerp(hand_scale_x, 1.5f, 0.1);
-        hand_scale_y = Lerp(hand_scale_y, 1.5f, 0.1);
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && player1.pick_color == false) {
-            std::cout << "Uno" << std::endl;
-            // last_card_timer = true;
-            say_uno = true;
-        }
-    }
-    else {
-        hand_scale_x = Lerp(hand_scale_x, 1, 0.1);
-        hand_scale_y = Lerp(hand_scale_y, 1, 0.1);
-    }
-
-    if (player1.deck.size() == 1 && player1.pick_color == false) {
-        if (say_uno == false) {
-            if (last_card_timer - last_card_time > 3.0f) {
-                player1.add_card();
-                player1.add_card();
-                last_card_timer = 0.0f;
-                last_card_time = last_card_timer;
-            }
-            else {
-                last_card_timer += 1 * GetFrameTime();
-            }
-        }
-    }
-    else {
+        player1.add_card();
         last_card_timer = 0.0f;
-        last_card_time = 0.0f;
+        last_card_time = last_card_timer;
+      } else {
+        last_card_timer += 1 * GetFrameTime();
+      }
     }
+  } else {
+    last_card_timer = 0.0f;
+    last_card_time = 0.0f;
+  }
 
-    if (player1.deck.size() > 1) {
-        say_uno = false;
-    }
-    if (player1.deck.size() == 0 && say_uno == false) {
-        center.is_over = false;
-        player1.add_card();
-        player1.add_card();
-    }
-    // if (center.is_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(GetMousePosition(), player1.rect) && !CheckCollisionPointRec(GetMousePosition(), player1.red) && !CheckCollisionPointRec(GetMousePosition(), player1.green) && !CheckCollisionPointRec(GetMousePosition(), player1.blue) && !CheckCollisionPointRec(GetMousePosition(), player1.yellow)) {
-    if (center.is_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(GetMousePosition(), player1.rect) && !player1.pick_color) {
-        restart();
-    }
+  if (player1.deck.size() > 1) {
+    say_uno = false;
+  }
+  if (player1.deck.size() == 0 && say_uno == false) {
+    center.is_over = false;
+    player1.add_card();
+    player1.add_card();
+  }
+  // if (center.is_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+  // !CheckCollisionPointRec(GetMousePosition(), player1.rect) &&
+  // !CheckCollisionPointRec(GetMousePosition(), player1.red) &&
+  // !CheckCollisionPointRec(GetMousePosition(), player1.green) &&
+  // !CheckCollisionPointRec(GetMousePosition(), player1.blue) &&
+  // !CheckCollisionPointRec(GetMousePosition(), player1.yellow)) {
+  if (center.is_over && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+      !CheckCollisionPointRec(GetMousePosition(), player1.rect) &&
+      !player1.pick_color) {
+    restart();
+  }
 }
